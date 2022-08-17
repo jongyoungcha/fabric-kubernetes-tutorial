@@ -75,11 +75,11 @@ spec:
           type: DirectoryOrCreate
       - name: orderer-msp
         hostPath:
-          path: /Users/jongyoungcha/gowork/fabric-kubernetes-tutorial/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp
+          path: /Users/jongyoungcha/gowork/fabric-kubernetes-tutorial/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp
           type: DirectoryOrCreate
       - name: orderer-tls
         hostPath:
-          path: /Users/jongyoungcha/gowork/fabric-kubernetes-tutorial/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls
+          path: /Users/jongyoungcha/gowork/fabric-kubernetes-tutorial/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/tls
           type: DirectoryOrCreate
           
         # persistentVolumeClaim:
