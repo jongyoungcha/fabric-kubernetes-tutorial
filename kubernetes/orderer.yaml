@@ -33,8 +33,6 @@ spec:
           value: /var/hyperledger/orderer/msp
         - name: ORDERER_OPERATIONS_LISTENADDRESS
           value: 0.0.0.0:17050
-        - name: FABRIC_CA_CLIENT_HOME
-          value: $(PWD)/organizations/peerOrganizations/org1.example.com/
         - name: ORDERER_GENERAL_TLS_ENABLED
           value: "true"
         - name: ORDERER_GENERAL_TLS_PRIVATEKEY

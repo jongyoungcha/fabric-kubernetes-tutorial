@@ -16,34 +16,36 @@ export FABRIC_CFG_PATH=${PWD}/configtx
 
 # This shell file based on fabric-test-network
 
-rm -rf {$PWD} ./organizations/ordererOrganizations
-rm -rf {$PWD} ./organizations/peerOrganizations
+echo "Removing Previous Directories"
+rm -rf ./organizations/ordererOrganizations
+rm -rf ./organizations/peerOrganizations
+rm -rf ./system-genesis-block
 
 # createOrgs()
 echo "Generating MSP"
-cryptogen generate --config=./crypto-config.yaml --output="organizations"
+cryptogen generate --config=./crypto-config.yaml --output=./organizations
 
 # createConsortium()
 echo "Generate Consortium"
 echo "Create Channel Tx (Genesis Tx)"
 configtxgen -profile TwoOrgsOrdererGenesis \
             -channelID  $CHANNEL_NAME \
-            -outputBlock ./system-genesis-block/genesis.block \
-            -configPath ./configtx
-
+            -outputBlock ./system-genesis-block/genesis.block
+            # -configPath ./configtx
+            
 # createChannelTx() 
-. organizations/fabric-ca/registerEnroll.sh
+# . organizations/fabric-ca/registerEnroll.sh
 
 mkdir -p organizations/ordererOrganizations/example.com
 export FABRIC_CA_CLIENT_HOME=${PWD}/organizations/ordererOrganizations/example.com
 
-set -x
-fabric-ca-client enroll -u https://admin:adminpw@localhost:9054 --caname ca-orderer --tls.certfiles ${PWD}/organizations/fabric-ca/ordererOrg/tls-cert.pem
-{ set +x; } 2>/dev/null
+# set -x
+# fabric-ca-client enroll -u https://admin:adminpw@localhost:9054 --caname ca-orderer --tls.certfiles ${PWD}/organizations/fabric-ca/ordererOrg/tls-cert.pem
+# { set +x; } 2>/dev/null
 
 echo 'NodeOUs:
-  Enable: true
-  ClientOUIdentifier:
+Enable: true
+ClientOUIdentifier:
   Certificate: cacerts/localhost-9054-ca-orderer.pem
   OrganizationalUnitIdentifier: client
 PeerOUIdentifier:
@@ -55,6 +57,22 @@ AdminOUIdentifier:
 OrdererOUIdentifier:
   Certificate: cacerts/localhost-9054-ca-orderer.pem
   OrganizationalUnitIdentifier: orderer' >${PWD}/organizations/ordererOrganizations/example.com/msp/config.yaml
+
+
+# echo 'NodeOUs:
+# Enable: true
+# ClientOUIdentifier:
+#   Certificate: cacerts/localhost-9054-ca-orderer.pem
+#   OrganizationalUnitIdentifier: client
+# PeerOUIdentifier:
+#   Certificate: cacerts/localhost-9054-ca-orderer.pem
+#   OrganizationalUnitIdentifier: peer
+# AdminOUIdentifier:
+#   Certificate: cacerts/localhost-9054-ca-orderer.pem
+#   OrganizationalUnitIdentifier: admin
+# OrdererOUIdentifier:
+#   Certificate: cacerts/localhost-9054-ca-orderer.pem
+#   OrganizationalUnitIdentifier: orderer' >${PWD}/organizations/ordererOrganizations/example.com/msp/config.yaml
 
 
 # export FABRIC_CA_CLIENT_HOME=${PWD}/organizations/ordererOrganizations/example.com
