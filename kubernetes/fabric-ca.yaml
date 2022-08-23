@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fabric-ca-env
+data:
+  FABRIC_CA_SERVER_HOME: /etc/hyperledger/fabric-ca # ca server home 경로
+  FABRIC_CA_SERVER_CSR_CN: ca.orgapeer.com # ca server cn(이름)
+  FABRIC_CA_SERVER_CSR_HOSTS: ca.orgapeer.com # ca server 호스트 
+  FABRIC_CA_SERVER_DEBUG: "true" # ca server 로깅 설정
+  FABRIC_CA_SERVER_CA_NAME: ca-apeer # ca server 이름
+  FABRIC_CA_SERVER_TLS_ENABLED: "false" # ca server tls 통신 여부
+  FABRIC_CA_SERVER_PORT: "7054" # ca server 사용 포트
+  FABRIC_CA_SERVER_SIGNING_DEFAULT_EXPIRY: 876600h # ca server 에서 발급하는 인증서 유효기간(약 100년)
+  FABRIC_CA_SERVER_SIGNING_PROFILES_TLS_EXPIRY: 876600h # ca server 에서 발급하는 인증서(TLS) 유효기간(약 100년)
+  FABRIC_CA_SERVER_CSR_CA_EXPIRY: 876600h # ca server root 인증서 유효기간(약 100년)
+  TZ: Asia/Seoul # 컨테이너 타임존 설정
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fabric-ca
+spec:
+  selector:
+    matchLabels:
+      app: fabric-ca
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: fabric-ca
+    spec:
+      containers:
+      - name: fabric-ca
+        image: hyperledger/fabric-ca:1.5.4
+        ports:
+          - containerPort: 7054
+        envFrom:
+          - configMapRef:
+              name: fabric-ca-env
+        volumeMounts:
+          - name: fabric-ca-shared
+            mountPath: /etc/hyperledger/fabric-ca
+      volumes:
+        - name: dockersocket
+          hostPath:
+            path: /var/run/docker.sock
+        - name: fabric-ca-shared
+          hostPath:
+            path: /Users/jongyoungcha/gowork/fabric-kubernetes-tutorial/fabric-ca-shared
+            type: DirectoryOrCreate
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fabric-ca
+spec:
+  type: NodePort
+  selector:
+    app: fabric-ca
+  ports:
+  - protocol: TCP
+    nodePort: 30300
+    port: 7054
+    targetPort: 7054
+
+ 

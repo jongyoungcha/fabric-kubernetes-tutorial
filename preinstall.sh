@@ -6,6 +6,8 @@ export ORDERER_CA=${PWD}/organizations/ordererOrganizations/example.com/orderers
 export PEER0_ORG1_CA=${PWD}/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
 export PEER0_ORG2_CA=${PWD}/organizations/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt
 
+. ./scripts/utils.sh 
+
 if [ ! -d ./fabric-samples ]; then
   curl -sSL https://bit.ly/2ysbOFE | bash -s -- 2.2.8 1.4.9
 fi
@@ -15,11 +17,14 @@ export PATH=$PATH:./fabric-samples/bin
 export FABRIC_CFG_PATH=${PWD}/configtx
 
 # This shell file based on fabric-test-network
-
 echo "Removing Previous Directories"
 rm -rf ./organizations/ordererOrganizations
 rm -rf ./organizations/peerOrganizations
 rm -rf ./system-genesis-block
+rm -rf ./fabric-ca-shared
+
+echo "Creating ./fabric-ca-shared"
+mkdir -p ./fabric-ca-shared
 
 # createOrgs()
 echo "Generating MSP"
@@ -31,10 +36,23 @@ echo "Create Channel Tx (Genesis Tx)"
 configtxgen -profile TwoOrgsOrdererGenesis \
             -channelID  $CHANNEL_NAME \
             -outputBlock ./system-genesis-block/genesis.block
-            # -configPath ./configtx
             
+kubectl apply -f ./kubernetes/fabric-ca.yaml
+
+
 # createChannelTx() 
 # . organizations/fabric-ca/registerEnroll.sh
+# createOrderer
+
+# while :
+# do
+# if [ ! -f "organizations/fabric-ca/org1/tls-cert.pem" ]; then
+# sleep 1
+# else
+# break
+# fi
+# done
+
 
 mkdir -p organizations/ordererOrganizations/example.com
 export FABRIC_CA_CLIENT_HOME=${PWD}/organizations/ordererOrganizations/example.com
@@ -56,24 +74,7 @@ AdminOUIdentifier:
   OrganizationalUnitIdentifier: admin
 OrdererOUIdentifier:
   Certificate: cacerts/localhost-9054-ca-orderer.pem
-  OrganizationalUnitIdentifier: orderer' >${PWD}/organizations/ordererOrganizations/example.com/msp/config.yaml
-
-
-# echo 'NodeOUs:
-# Enable: true
-# ClientOUIdentifier:
-#   Certificate: cacerts/localhost-9054-ca-orderer.pem
-#   OrganizationalUnitIdentifier: client
-# PeerOUIdentifier:
-#   Certificate: cacerts/localhost-9054-ca-orderer.pem
-#   OrganizationalUnitIdentifier: peer
-# AdminOUIdentifier:
-#   Certificate: cacerts/localhost-9054-ca-orderer.pem
-#   OrganizationalUnitIdentifier: admin
-# OrdererOUIdentifier:
-#   Certificate: cacerts/localhost-9054-ca-orderer.pem
-#   OrganizationalUnitIdentifier: orderer' >${PWD}/organizations/ordererOrganizations/example.com/msp/config.yaml
-
+  OrganizationalUnitIdentifier: orderer' >"${PWD}/organizations/ordererOrganizations/example.com/msp/config.yaml"
 
 # export FABRIC_CA_CLIENT_HOME=${PWD}/organizations/ordererOrganizations/example.com
 
@@ -84,7 +85,7 @@ OrdererOUIdentifier:
 # createChannel()
 # echo "Creating Consortium (Genesis Block)"
 # echo $FABRIC_CFG_PATH
-# peer channel create -o localhost:7050 -c $CHANNEL_NAME --ordererTLSHostnameOverride orderer.example.com -f ./channel-artifacts/${CHANNEL_NAME}.tx --outputBlock $BLOCKFILE --tls --cafile $ORDERER_CA
+# peer channel create -o localhost:7050 -c $CHANNEL_NAME --ordererTLSHostnameOverride orderer.example.com -f ./channel-artifacts/${CHANNEL_NAME}.tx --outputBlock $BLOCKFILE --tls --cafiyle $ORDERER_CA
 
 # docker-compose up (apply kuberntes yaml files)
 kubectl apply -f ./kubernetes/orderer.yaml &&
